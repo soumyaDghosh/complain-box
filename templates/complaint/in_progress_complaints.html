@@ -1,0 +1,142 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %} In Progress{% endblock title %}
+
+{% block navbar_content %}
+
+{% endblock navbar_content %}
+
+
+{% block body_content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb bg-white shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">In Progress</li>
+    </ol>
+</nav>
+
+<div class="card flex-fill px-0 shadow-sm">
+    <div class="card-header pb-0 d-flex justify-content-between flex-wrap">
+        <span>
+            <h2 class="card-title">In Progress</h2>
+        </span>
+
+    </div>
+
+    <style>
+        .comment_link {
+            display: none;
+            transition: ease-in-out .2s;
+            /* direction: none; */
+        }
+        .comment_link:link {
+            text-decoration: none;
+        }
+        .comment_show {
+            display: block;
+        }
+        .comment_show:hover{
+            color: rgb(18, 96, 175);
+            font-weight: 600;
+            border-radius: .1rem;
+            transform: scale(1.05);
+            /* background-color: rgb(218, 233, 255); */
+    
+        }
+        .comment_num{
+            position: relative;
+            padding: 0 .18rem;
+            font-size: .65rem;
+            font-weight:600 ;
+            top: 3px;
+            left: -5px;
+            border-radius:5rem;
+            border: 1px solid rgb(158, 198, 238);
+        }
+    </style>
+
+    <div class="card-body px-0 pt-0" id="table_container" style="overflow-x:scroll ;">
+        {% if in_progress_complains %}
+        <table class="table table-sm table-hover my-0" style="min-width: 50rem;">
+            <thead class="">
+                <tr>
+                    <th class="px-3 border-0">Complaint ID</th>
+                    <th class="border-0">Customer</th>
+                    <th class="border-0" width="300">Product</th>
+                    {% comment %} <th class="border-0" style=" width: 40%;">Problem</th> {% endcomment %}
+                    <th class="border-0">Registred on</th>
+                    <th class="border-0" width="200">Assigned (By->To)</th>
+                    <th class="text-center border-0"  style="min-width:3rem ;"></th>
+                    <th class="border-0" style="width: 10rem; min-width:5rem; text-align: center; ">Status</th>
+                    <th class="border-0">View</th>
+                </tr>
+            </thead>
+
+            <tbody class="table_body">
+                {% for complaint in in_progress_complains %}
+                <tr>
+                    <th class="px-3" scope="row"><span># </span> <span class="complaint_id">{{complaint.id}}</span></th>
+                    <td>{{complaint.customer_name}}</td>
+                    <td> <span>{{complaint.brand}}</span> - <span>{{complaint.model_no}}</span> </td>
+                    {% comment %} <td>{{complaint.problem}}</td> {% endcomment %}
+                    <td>{{complaint.registred_date}}({{complaint.registred_by}})</td>
+                    <td>{{complaint.assigned_date}}({{complaint.assigned_by}}->{{complaint.assigned_to}})</td>
+                    <td class="text-center">
+                        <a href="{% url 'user_comment' complaint.id %}" class="comment_link" ><i class="bi bi-chat-square"></i> <span class="comment_num text-center m-auto">0</span> </a>
+                    </td>
+                    <td style="text-align: center;"><span class="mx-2 status_badge st{{complaint.complaint_status}}"
+                            id="status_badge" style="font-size: .9rem;"></span></td>
+                    <td class="px-3" width="40">
+                        <a href="{% url 'view_complaint' complaint.id %}">
+                            <div class="btn btn-outline-primary rounded py-0 px-2"> -> </div>
+                        </a>
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="closing_empty d-flex justify-content-center align-items-center" style="height: 30vh;">
+        <div class="icon text-secondary" style=" display:block; flex-direction:column;">
+            <i style="font-size:6rem ;" class="fa-solid fa-inbox"></i>
+            <h4 class="text-center text-secondary">
+                All Sorted
+            </h4>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+<script>
+    let lnk = document.getElementById('in_progress-link');
+    lnk.classList.add('active');
+
+
+    let complaint_id = document.getElementsByClassName("complaint_id");
+let comment_link = document.getElementsByClassName("comment_link");
+
+comment_link_arr = Array.from(comment_link);
+
+Array.from(complaint_id).forEach(async (e,i) => {
+    let hasComment = await get_comment_info(e.innerText);
+    if (hasComment) {        
+        comment_link[i].classList.add('comment_show');
+        comment_link[i].children[1].innerText = hasComment
+    }
+});
+// console.log(complaint_id);
+
+
+async function get_comment_info(id) {
+        url = `{% url 'has_comments' 121%}`
+        url = url.replace('121',id)
+        const response = await fetch(url);
+        res = await response.text();
+        return Number(res.slice(1,-1));
+    }
+</script>
+
+{% endblock %}

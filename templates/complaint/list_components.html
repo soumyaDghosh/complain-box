@@ -1,0 +1,253 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}View Compaint{% endblock title %}
+
+{% block body_content %}
+{% include 'home/partials/_message.html' %}
+
+<style>
+    .header_btn {
+        display: flex;
+        justify-content: end;
+    }
+    #add_manually {
+            width: fit-content;
+        }
+        
+    @media screen and (max-width:760px) {
+            .header_btn {
+                    
+                    margin-top: 1rem;
+                    display: flex;
+                    justify-content: start;
+                }
+                #add_manually {
+                        width: 100%;
+                }
+    }
+</style>
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb bg-white shadow-sm">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'all_complaints' %}">All Complaints</a></li>
+            {% if not request.user.is_staff %}
+            <li class="breadcrumb-item"><a href="{% url 'view_complaint_engg' complaint.id %}">View Complaint</a></li>
+            {% else %}
+            <li class="breadcrumb-item"><a href="{% url 'view_complaint' complaint.id %}">View Complaint</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">Compnents</li>
+    </ol>
+</nav>
+
+
+<div class="row mx-0">
+    <!-- Header -->
+    <div class="card shadow-sm">
+            <div class="card-body pt-2 pb-1 mx-2 px-0">
+                <table>
+                        
+                        <h4 class="py-2">Complaint ID: #{{complaint.id}} </h4>
+                       
+                </table>
+                <!-- <hr>     -->
+                <div class="header row bg-light py-1 rounded">
+                            <div class="col-md-6 my-auto d-flex">
+                                {% if complaint.complaint_status < 5  and complaint.complaint_status > 1 %}
+                                    <input type="search" class="form-control form-control w-50" id="search_input" placeholder="Search for products" >
+                                    <button class="mx-1 btn btn-secondary" disabled id="clearText">Clear</button>
+                                {% else %}        
+                                        <input type="search" class="form-control form-control w-50" id="search_input" placeholder="Type to Search" disabled>
+                                        <span class="my-auto  px-2 py-auto text-muted mx-2" > <i class="fa-solid fa-lock"></i>  Complaint Locked </span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 header_btn">
+                                 
+                                    <div class="btn btn-primary mx-1"><i class="fa-solid fa-list"></i>
+                                            View All</div>
+                                    
+                    </div>
+            </div>
+            <!-- <hr class="py-0 my-1"> -->
+            <div class="card rounded mt-1 mx-auto " id ="res_box" style="position:absolute; min-width: 60%; display: none;" >
+                <div class="card-body rounded border py-1 px-2">
+                        <div class="res_container" id="res_container" style="overflow-y:scroll; overflow-x: hidden; max-height: 70vh;"> 
+
+                        </div>
+                </div>
+            </div>
+            <div class="px-1 mt-1">
+                    
+                    {% if components %}
+                    <div class="table-container px-0"  style="overflow-x: scroll;">
+
+                            <table class="table table-sm table-striped rounded">
+                                    <thead class="bg-secondary text-light">
+                                            <tr>
+                                                    <th width="220" class=" mx-auto pl-2">Item</th>
+                                                    <th >Description</th>
+                                                    <th width="60" >Quantity</th>
+                                                    <th width="110" class="text-center" >Action</th>
+                                            </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <tr></tr>
+                                            {% for component in components %}
+                                            <tr>
+                                                    <td>{{component.brand}}-{{component.name}}</td>
+                                                    <td>{{component.desc|truncatewords:10}}</td>
+                                                    <td style="text-align:center ;">{{component.quantity}}</td>
+                                                    <td style="text-align:center ;">
+                                                        {% if component.product %}
+                                                        {% if complaint.complaint_status < 5 and complaint.complaint_status > 1 %}
+                                                                <form action="{% url 'delete_component' component.id %}" method="POST"  >
+                                                                        {% csrf_token %}
+                                                                        <button type="submit" title="Remove" class="btn btn-danger  py-0 rounded"><i class="fa-solid fa-xmark"></i></button>
+                                                                </form>
+                                                        {% else %}
+                                                        <button type="submit" title="Remove" class="btn btn-danger py-0 rounded" disabled><i class="fa-solid fa-xmark"></i></button>
+                                                        {% endif %}
+                                                        {% else %}
+                                                        {% if complaint.complaint_status < 5 and complaint.complaint_status > 1  %}
+                                                        <div class="btn-group">
+                                                                <a href="{% url 'update_component' component.id%}" title="Update" class="btn btn-primary py-0 rounded"><i class="fa-solid fa-pencil"></i></a>
+                                                                <form action="{% url 'delete_component' component.id %}" method="POST"  >
+                                                                        {% csrf_token %}
+                                                                        <button type="submit" title="Remove" class="btn btn-danger  py-0 rounded mx-1"><i class="fa-solid fa-xmark"></i></button>
+                                                                </form>
+                                                        </div>
+                                                        {% else %}
+                                                                <button title="Update" class="btn btn-primary py-0 rounded" disabled><i class="fa-solid fa-pencil" ></i></button>
+                                                                <button type="submit" title="Remove" class="btn btn-danger  py-0 rounded mx-1" disabled><i class="fa-solid fa-xmark"></i></button>
+                                                        {% endif %}
+                                                        {% endif %}
+                                                        </td>
+                                        </tr>
+                                            {% endfor %}
+                                    </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty_box d-flex justify-content-center mt-4">
+                                <h3 class="text-secondary">No Components Added yet</h3>
+                                
+                        </div>
+                        <div class="empty_box d-flex justify-content-center mb-4 text-secondary">
+                                Type in search box to search for components
+                                
+                        </div>
+                        
+                        {% endif %}
+                        {% if complaint.complaint_status < 5 %}
+                        <a href="{% url 'add_component_manual' complaint.id %}" class="btn btn-primary mb-2" id="add_manually" >+ Add Manually</a>
+                        
+                        {% else %}
+                        {% endif %}
+
+            </div>
+    </div>
+</div>
+
+<script>
+    search_input = document.getElementById("search_input");
+    res_box = document.getElementById("res_box");
+    res_container = document.getElementById("res_container");
+    clearText = document.getElementById("clearText");
+
+    search_input.addEventListener('keyup', () => {
+        if(search_input.value.length <= 0) {
+                clearText.disabled = true;
+        }
+        if(search_input.value.length > 0) {
+                clearText.disabled = false;
+                clearText.addEventListener('click',()=> {
+                        search_input.value = "";
+                        res_box.style.display = "none";
+                        clearText.disabled = true;
+                })
+        }
+
+        if(search_input.value.length >= 2) {
+        //     console.log("search activated!");
+            search_product()
+            res_box.style.display = "block";
+        }
+        if(search_input.value.length<2){
+                // console.log("Searching stopped!");
+                res_box.style.display = "none";
+        }
+    })
+    token = '{{csrf_token}}'
+//     console.log(token)
+
+
+    function search_product() {
+        searchTxt = search_input.value
+        url = "{% url 'search_product' %}";
+        fetch(url,{
+                body:JSON.stringify({searchText:searchTxt}),
+                method : "POST",
+                credentials: 'same-origin',
+                headers: {
+                        "X-CSRFToken": token,
+                }     
+        }).then((res)=>res.json()).then((data)=>{
+                populate_data(data);
+        })
+    }
+
+    function populate_data(data){
+        res = "";
+        if(data.length<=0){
+                console.log("No results found.");
+                res = "No Results Found!";
+        }
+        else{
+                // console.log(data.length);
+                res += `<h5 class = "pb-2"> 
+                        Showing (<strong>${data.length}</strong>) result(s) for <strong>${searchTxt}</stong> ...
+                        </h5>`
+
+                data.forEach(item => {
+                        // console.log(item);   
+                        res+=`
+                                <div class="row bg-light p-2 mb-2 rounded mx-1">
+                                        <div class="col-md-10">
+                                                <div class="header d-flex my-0 pb-0">
+                                                        <h5 class="my-auto">
+                                                                ${item.brand} - ${item.name} | 
+                                                        </h5>
+                                                        <div class="badge mb-">     
+                                                                <span class="badge badge-primary">${item.category}</span>
+                                                                <span class="badge badge-info">${item.warrenty} months warrenty</span>
+                                                                ${item.quantity<1? `</span> <span class="badge badge-danger">Not Available</span>`:`</span> <span class="badge badge-success">Available</span>`}
+                                                        </div>
+                                                </div>
+
+                                                <span class = "text-secondary" style="font-size:.7rem; font-weight:400;">
+                                                        ${item.desc}
+                                                </span>
+                                        </div>
+                                        <div class="col-md-2 my-auto">
+                                                <form class = "btn_form" action = "{% url 'add_component' complaint.id %}" method = "POST"">
+                                                        {% csrf_token %}
+                                                        <input type = "text" value = ${item.id} name = "pk_pro" hidden>
+                                                        
+                                                        ${item.quantity<1? `<button type = "submit"  class = "add_component  btn btn-primary btn-sm rounded float-right" disabled><i class="fa-solid fa-plus"></i> Add </button>`:`<button type = "submit"  class = "add_component  btn btn-primary btn-sm rounded float-right"><i class="fa-solid fa-plus"></i> Add </button>` }
+                                                
+                                                        
+                                                </form>     
+                                        </div>
+                                </div>
+                        `
+                });
+        }
+        res_container.innerHTML = res;
+    }
+
+        let lnk = document.getElementById('all_complaints-link');
+        lnk.classList.add('active');
+</script>
+
+{% endblock %}

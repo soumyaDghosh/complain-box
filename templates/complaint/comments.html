@@ -1,0 +1,177 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}All Complaints{% endblock title %}
+
+{% block body_content %}
+{% include 'home/partials/_message.html' %}
+
+<nav aria-label="breadcrumb ">
+    <ol class="breadcrumb bg-white shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'all_complaints' %}">All Complaints</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Comments</li>
+    </ol>
+</nav>
+
+<style>
+    .card-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .card-header img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .card-header strong {
+        margin-left: 10px;
+    }
+
+    .card-body {
+        padding: 0.75rem 1.25rem;
+    }
+
+    .comment_header_left {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+
+    @media screen and (max-width:760px) {
+        .comment_header_left {
+            flex-direction: column;
+            align-items: start;
+        }
+    }
+</style>
+
+<div class="card shadow-sm">
+    <div class="header my-2  ml-3">
+        <h4 class="my-auto text-secondary">#{{complaint}}</h4>
+    </div>
+    <hr class="my-1"> 
+    <div class="card-body">
+        {% for comment in comments %}
+
+        <div class="card shadow-none bg-light py-0 mb-3 border  mx-auto rounded ">
+            {% if comment.user == request.user %}
+            <div class="card-header py-1 px-1 d-flex justify-content-between"
+                style="background-color:rgb(225, 229, 238);">
+            {% else %}
+                <div class="card-header bg-light py-1 px-1 d-flex justify-content-between">
+            {% endif %}
+                    <!-- <img src="https://via.placeholder.com/50x50" class="rounded-circle mr-2" alt="User Image"> -->
+                    <span class="comment_header_left">
+
+                        {% if comment.user == request.user %}
+                        <span>
+                            <strong >{{comment.user.get_full_name}}</strong>
+                            <span class="text-secondary">(You)</span>
+                        </span>
+                        {% else %}
+                        <strong>{{comment.user.get_full_name}} </strong>
+                        {% endif %}
+
+                        <small class="ml-2">Posted:{{comment.date_added|date:' M-d-Y'}}</small>
+                    </span>
+                    <div class="d-flex">
+                        {% if comment.user.is_superuser %}
+                        <span class="badge text-dark border bg-white rounded-pill my-auto px-2">Admin</span>
+
+                        {% elif comment.user.is_staff %}
+                        <span class="badge text-dark border bg-white rounded-pill my-auto px-2">Staff</span>
+
+
+                        {% else %}
+                        <span class="badge text-dark border bg-white rounded-pill my-auto px-2">Engineer</span>
+                        {% endif %}
+
+                        <!-- Button trigger modal -->
+                        <!-- Button trigger modal -->
+                        {% if comment.user == request.user %}
+                        <button type="button" class="btn btn-primary px-2 py-0 my-auto mx-1 border rounded-pill " data-toggle="modal" data-target="#update{{comment.id}}" style="font-size: .7rem;">
+                            Edit
+                        </button>
+                        
+                        <!-- Modal -->
+                        <div class="modal fade" id="update{{comment.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    </div>
+                                    <div class="modal-body">
+                                    
+                                        <form action="{% url 'update_comment' comment.id %}" method="POST">
+                                            {% csrf_token %}
+                                            <div class="mb-2 mx-1">
+                                                <label for="exampleFormControlTextarea1" class="form-label">
+                                                    Update Comment</label>
+                                                <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"
+                                                    name="message">{{comment.user_comment}}</textarea>
+                                            </div>
+                                            <input type="text" name="cmp_id" id="" value={{complaint.id}} hidden>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+
+                        {% if comment.user == request.user %}
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-secondary dropdown-toggdle px-1 py-0 rounded" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                        
+                            <div class="dropdown-menu bg dropdown-menu-right py-1" aria-labelledby="dropdownMenuButton1">
+                                <form action="{% url 'delete_comment' comment.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" name="cmp_id" id="" value={{complaint.id}} hidden>
+                                    <button class="dropdown-item" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body bg-white">
+                    <p class="card-text">{{comment.user_comment}}</p>
+                </div>
+            </div>
+            {% endfor %}
+
+            <hr class="my-1">
+            <div class="px-1 py-1">
+                <form action="{% url 'user_comment' complaint.id %}" class="bg-light py-2 px-0 border rounded"
+                    method="post">
+                    {% csrf_token %}
+                    <div class="mb-2 mx-3">
+                        <label for="exampleFormControlTextarea1" class="form-label">Write Your Comment Here</label>
+                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="message"
+                            placeholder="Leave a message..." minlength=1></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end mx-3">
+                        <button class="btn btn-primary" type="submit">
+                            Comment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    {% endblock %}

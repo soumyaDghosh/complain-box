@@ -1,0 +1,346 @@
+{% extends 'base_dashboard.html' %}
+{% include 'home/partials/_message.html' %}
+
+{% block title %}All Complaints{% endblock title %}
+
+{% block navbar_content %}
+
+{% endblock navbar_content %}
+
+
+
+{% block body_content %}
+<nav aria-label="breadcrumb ">
+    <ol class="breadcrumb bg-white shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">All Complaints</li>
+    </ol>
+</nav>
+
+{% include 'home/partials/_message.html' %}
+
+
+<div class="card flex-fill px-0 shadow-sm">
+    <div class="card-header pl-3 pb-2 d-flex justify-content-between flex-wrap">
+        <span>
+            <h2 class="card-title"> All Complaints </h2>
+        </span>
+        <span class="d-flex justify-content-center">
+            <input type="text" id="search_box" class="form-control form-control-sm rounded" name="search_text"
+                placeholder="Search">
+            <div class=" ml-2 btn btn-primary btn-sm rounded" style="" id="search_btn">Search</div>
+        </span>
+    </div>
+<style>
+    .comment_link {
+        display: none;
+        transition: ease-in-out .2s;
+        /* direction: none; */
+    }
+    .comment_link:link {
+        text-decoration: none;
+    }
+    .comment_show {
+        display: block;
+    }
+    .comment_show:hover{
+        color: rgb(18, 96, 175);
+        font-weight: 600;
+        border-radius: .1rem;
+        transform: scale(1.05);
+        /* background-color: rgb(218, 233, 255); */
+
+    }
+    .comment_num{
+        position: relative;
+        padding: 0 .18rem;
+        font-size: .65rem;
+        font-weight:600 ;
+        top: 3px;
+        left: -5px;
+        border-radius:5rem;
+        border: 1px solid rgb(158, 198, 238);
+
+    }
+
+</style>
+    <div class="card-body p-0 pb-0 mb-0 " id="table_container" style="overflow-x:scroll ;">
+        <div id="all_comlpaints_table">
+            <table class="table table-sm table-hover my-0" style="min-width:50rem;">
+                <thead>
+                    <tr class="" style=""">
+                        <th class=" px-3 border-bottom-0">Complaint ID</th>
+                        {% if request.user.is_staff %}
+                        <th class="border-bottom-0">Customer</th>
+                        {% endif %}
+                        <th class="border-bottom-0">Product</th>
+                        <th class="border-bottom-0" width=400>Problem</th>
+                        {% if request.user.is_staff %}
+                        <th class="border-bottom-0">Registred on</th>
+                        {% endif %}
+                        <th class="text-center border-bottom-0"  style="min-width:3rem ;"></th>
+                        <th class="border-bottom-0" width="80" style="min-width:8rem; text-align: center; ">Status</th>
+                        <th class="px-3 border-bottom-0">View</th>
+                    </tr>
+                </thead>
+
+                <tbody">
+                    {% for complaint in page_obj %}
+                    <tr>
+                        <th scope="row" class="px-3"><span># </span> <span class="complaint_id">{{complaint.id}}</span></th>
+                        {% if request.user.is_staff %}
+                        <td>{{complaint.customer_name}}</td>
+                        {% endif %}
+                        <td> <span>{{complaint.brand}}</span> - <span>{{complaint.model_no}}</span> </td>
+                        <td>{{complaint.problem|truncatewords:5}}</td>
+                        {% if request.user.is_staff %}
+                        <td>{{complaint.registred_date}}</td>
+                        {% endif %}
+                        <td class="text-center">
+                            <a href="{% url 'user_comment' complaint.id %}" class="comment_link" ><i class="bi bi-chat-square"></i> <span class="comment_num text-center m-auto">0</span> </a>
+                        </td>
+                        <td style="text-align: center; ;"><span
+                                class="mx-2 status_badge st{{complaint.complaint_status}}" id="status_badge"
+                                style="font-size: .9rem;"></span></td>
+                        <td class="px-3" width="40">
+                            {% if user.is_staff %}
+                            <a href="{% url 'view_complaint' complaint.id %}">
+                                <div class="btn btn-outline-primary rounded py-0 px-2"> -> </div>
+                            </a>
+                            {% else %}
+                            <a href="{% url 'view_complaint_engg' complaint.id %}">
+                                <div class="btn btn-outline-primary rounded py-0 px-2"> -> </div>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+            </table>
+            <div class="pagination-container m-2" style="justify-content:space-between;" id="pagination">
+                <div>
+                    Showing page {{page_obj.number}} of {{page_obj.paginator.num_pages}}
+
+                </div>
+
+                <div>
+                    <nav aria-label="Page navigation example">
+                        {% if page_obj.has_previous %}
+                        <a class="btn btn-outline-primary btn-sm rounded " href="?page=1">First</a>
+                        <a class="btn btn-outline-primary btn-sm rounded"
+                            href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <a class="btn btn-primary btn-sm rounded" href="?page={{ num }}">{{ num }}</a>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a
+                            class="btn btn-outline-primary btn-sm rounded" href="?page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <a class="btn btn-outline-primary btn-sm rounded"
+                                href="?page={{ page_obj.next_page_number }}">Next</a>
+                            <a class="btn btn-outline-primary btn-sm rounded"
+                                href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            {% endif %}
+                    </nav>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="search_msg"></div>
+        <div id="search_res_table" style="display:none ;">
+            <h5 class="mb-2" id="res_found_msg">
+                Search Results...
+            </h5>
+            <table class="table table-sm table-hover" style="min-width: 50rem;">
+                <!-- <thead>
+                    <tr class="" style=""">
+                        <th class="px-3 border-0">Complaint ID</th>
+                        <th class="border-0">Customer</th>
+                        <th class="border-0">Product</th>
+                        <th class="border-0" style=" width: 40%;">Problem</th>
+                        {% if request.user.is_staff %}
+                        <th class="border-0">Registred on</th>
+                        {% endif %}
+                        <th class="border-0" width= "80" style="min-width:11rem; text-align: center; ">Status</th>
+                        <th class="px-3 border-0">View</th>
+                    </tr>
+                </thead> -->
+
+                <tbody id="table_body">
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let all_comlpaints_table = document.getElementById('all_comlpaints_table');
+
+    let search_res_table = document.getElementById('search_res_table');
+    let table_body = document.getElementById("table_body");
+    // let item = document.getElementById('search_msg');
+    let search_msg = document.getElementById("search_msg");
+    let res_found_msg = document.getElementById("res_found_msg");
+    // console.log(all_comlpaints_table);
+
+
+
+
+    searchVal = '';
+    function populate_res(data) {
+        all_comlpaints_table.style.display = "none";
+        search_res_table.style.display = "block";
+
+        console.log(data.length);
+        search_msg.style.display = "block"
+
+        let search_res = "";
+        if (data.length == 0) {
+            search_msg.innerHTML = `<h3> No results found </h3>`
+            console.log("No results");
+            search_res_table.style.display = "none";
+        }
+        else {
+            let msg = `<span class="mx-2 ">Showing <strong>(${data.length})</strong> Result(s) for <strong> ${searchVal} ...</strong></span>`;
+            res_found_msg.innerHTML = msg;
+            // console.log("results found")
+
+            data.forEach(complaint => {
+                let itemID = complaint.id;
+                "{% if user.is_staff %}"
+                let view_cmp = "view_complaint/attr/".replace('attr', itemID);
+
+                "{% else %}"
+                let view_cmp1 = "view_complaint_e/attr/".replace('attr', itemID);
+                "{% endif %}"
+                search_msg.style.display = "none";
+                search_res_table.style.display = "block";
+
+                const link = function () {
+                    document.location.href = view_cmp;
+                }
+                search_res += `
+                            <tr>
+                                <th scope="row" class="px-3"><span># </span> <span>${complaint.id}</span></th>
+                                <td>${complaint.customer_name}</td>
+                                <td> <span>${complaint.brand}</span> - <span>${complaint.model_no}</span> </td>
+                                <td >${complaint.problem}</td>
+                                {% if request.user.is_staff %}
+                                <td>${complaint.registred_date}</td>
+                                {% endif %}
+                                <td style = "text-align: center;"><span class="mx-2 status_badge st${complaint.complaint_status}" id="status_badge" style="font-size: .9rem;"></span></td>
+                                <td class="px-3 text-end">
+                                    {% if user.is_staff %}
+                                    <a href=${view_cmp}>
+                                        <div class="btn btn-outline-primary rounded py-0 px-2"> -> </div>
+                                    </a>
+                                    {% else %}
+                                    <a href=${view_cmp1}>
+                                        <div class="btn btn-outline-primary rounded py-0 px-2"> -> </div>
+                                    </a>
+                                    {% endif %}
+
+                                    </td>
+                                    </tr> `;
+            });
+            table_body.innerHTML = search_res;
+        }
+    }
+
+    let search_box = document.getElementById("search_box");
+
+    function reset_search() {
+        if (search_box.value.length == 0) {
+            // console.log("cleared");
+            all_comlpaints_table.style.display = "block";
+            search_res_table.style.display = "none";
+        }
+    }
+
+    search_box.addEventListener('keyup', () => {
+        reset_search();
+    });
+
+    window.onkeydown = function (key) {
+        if (key.keyCode === 13 && search_box.value.length > 0) {
+            Search_cmp();
+            console.log("key pressed");
+        }
+        if (key.keyCode === "Escape") {
+            reset_search();
+        }
+    }
+
+
+
+
+    search_box.addEventListener('keyup', () => {
+        if (search_box.value.length == 0) {
+            // console.log("cleared");
+            all_comlpaints_table.style.display = "block";
+            search_res_table.style.display = "none";
+        }
+
+    });
+
+    let search_btn = document.getElementById("search_btn");
+
+    search_btn.addEventListener('click', () => {
+        if (search_box.value.length > 0) {
+            Search_cmp();
+        }
+    })
+
+    function Search_cmp() {
+        // console.log(search_box.value);
+        searchVal = search_box.value
+        url = "{% url 'search-complaint_global' %}"
+        // console.log(url);
+        fetch(url, {
+            body: JSON.stringify({ searchText: searchVal }),
+            method: "POST",
+        }).then((res) => res.json()).then((data) => {
+
+            populate_res(data);
+        });
+    }
+
+
+    let lnk = document.getElementById('all_complaints-link');
+    lnk.classList.add('active');
+
+
+let complaint_id = document.getElementsByClassName("complaint_id");
+let comment_link = document.getElementsByClassName("comment_link");
+
+comment_link_arr = Array.from(comment_link);
+
+Array.from(complaint_id).forEach(async (e,i) => {
+    let hasComment = await get_comment_info(e.innerText);
+    if (hasComment) {        
+        comment_link[i].classList.add('comment_show');
+        comment_link[i].children[1].innerText = hasComment
+    }
+});
+// console.log(complaint_id);
+
+
+async function get_comment_info(id) {
+        url = `{% url 'has_comments' 121%}`
+        url = url.replace('121',id)
+        const response = await fetch(url);
+        res = await response.text();
+        return Number(res.slice(1,-1));
+    }
+</script>
+
+
+
+{% endblock body_content %}

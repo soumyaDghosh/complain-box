@@ -1,0 +1,113 @@
+{% extends 'base_dashboard_store.html' %}
+
+{% block title %}Closed Complaints{% endblock title %}
+
+{% block navbar_content %}
+
+{% endblock navbar_content %}
+
+
+{% block body_content %}
+{% include 'home/partials/_message.html' %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb bg-white shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'store' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Update Product</li>
+    </ol>
+</nav>
+
+<style>
+    .form-control {
+        margin-top: -.1rem;
+        margin-bottom: .5rem;
+    }
+    input,textarea{
+        border-radius: .2rem !important;
+    }
+
+    label{
+        font-size: .8rem;
+        color: grey;
+     }
+</style>
+
+
+<div class="card flex-fill w-sm-50 mx-auto mx-auto shadow-sm">
+    <div class="card-header mb-0 pb-0">
+        <h3 class="card-titlse mx-3 py-1 rounded text-dark"> Update Product </h3>
+    </div>
+    <hr class="my-0">
+    <div class="card-body">
+        {% include 'home/partials/_message.html' %}
+        <div class="form-container  m-auto px-4 py-2 rounded">
+            <form action="{% url 'update_product' product.id %}" method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="component_name">Product Name</label>
+                        {{form.name}}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="component_name">Brand</label>
+                        {{form.brand}}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="component_name">Description</label>
+                        {{form.desc}}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="component_name">Unit Prince</label>
+                        {{form.unit_price}}
+                        <label for="component_name">Quantity</label>
+                        {{form.quantity}}
+                    </div>
+                </div>
+
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div >
+                            <label for="category">Category</label>
+                            <select name="category" id="category" class="form-control form-control-sm ">
+                                <!-- category goes here -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="component_name">Warrenty</label>
+                        {{form.warrenty}}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="component_name">Tax %</label>
+                        {{form.tax}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr class="my-1">
+        <div class="row">
+            <div class="col-sm-9"></div>
+            <input type="submit" class="btn btn-primary mt-2 col-sm-2 my-2 mx-auto text-center" style="max-width: 18rem;" value="Save" >
+        </div>
+    </form>
+</div>
+
+<script>
+    let cat = document.getElementById('category');
+    catrgories = {{categories|safe}};
+
+    str = `<option value="null">Select Category</option>`;
+    if(catrgories.length>0){
+        catrgories.forEach(e => {
+            str+=`
+            <option value="${e.toLowerCase()}" ${e.toLowerCase()=='{{p_cat}}' ? `selected`:``} >${e}</option>
+            `
+        });
+        cat.innerHTML = str;
+    }
+</script>
+
+{% endblock %}
