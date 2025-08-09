@@ -16,6 +16,8 @@ from django.http import JsonResponse
 import datetime
 import requests
 
+from multiuser_site.settings import env
+
 def home(request):
     return redirect('dashboard')
 
@@ -31,7 +33,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         pending_complaints = Complaint.objects.filter(complaint_status = 1).count()
         daily_complaints = Complaint.objects.values('registred_date').annotate(count=Count('id')).order_by('-registred_date')
         compLastMonth = Complaint.objects.values('registred_date').annotate(count=Count('id')).order_by('-registred_date')[0:30]
-            
+
         user = self.request.user
         if user.is_superuser:
             last_emp = User.objects.last()
@@ -49,13 +51,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 "no_of_engg":no_of_engg,
                 "pending_complaints":pending_complaints
             })
-            
-            
+
+
         elif user.is_staff:
-            
+
             comp_registered_by_emp = Complaint.objects.filter(registred_by = user)
             total_components_registered_by_emp = Complaint.objects.filter(registred_by = user).count()
-            
+
             context.update({
                 "user":user,
                 "comp_registred":comp_registered_by_emp,
@@ -91,7 +93,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 #         compLastMonth = Complaint.objects.values('registred_date').annotate(count=Count('id')).order_by('-registred_date')[0:30]
 #         for x in compLastMonth:
 #             print(x)
-            
+
 #         user = request.user
 #         # print(daily_complaints)
 #         if user.is_superuser:
@@ -110,13 +112,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 #                 "no_of_engg":no_of_engg,
 #                 "pending_complaints":pending_complaints
 #             }
-            
-            
+
+
 #         elif user.is_staff:
-            
+
 #             comp_registered_by_emp = Complaint.objects.filter(registred_by = user)
 #             total_components_registered_by_emp = Complaint.objects.filter(registred_by = user).count()
-            
+
 #             context = {
 #                 "user":user,
 #                 "comp_registred":comp_registered_by_emp,
@@ -159,9 +161,9 @@ class Anylitics_API(APIView):
             total_earning = 0
             for item in items:
                 total_earning = total_earning + item.unit_price + item.quantity
-                
+
             data = {
-                'total_earning' : total_earning 
+                'total_earning' : total_earning
             }
             return Response(data)
 
@@ -254,7 +256,6 @@ def has_comments(request,pk):
 # OTP varification
 import random
 import pytz
-from decouple import config
 
 
 def OTP_verification(request,pk):
@@ -284,11 +285,11 @@ def OTP_verification(request,pk):
                 ComplaintOTP.objects.create(complaint = complaint,otp = otp,expires_at = expiry_time)
                 print("otp sent successfully :", otp)
                 return JsonResponse({"message":"otp sent successfully!", "statuss":"success"},safe=False)
-    
+
     if request.method == 'POST':
         recived_otp = request.POST['recived_otp']
         otp_obj = all_otps[0]
-        if recived_otp == otp_obj.otp:  
+        if recived_otp == otp_obj.otp:
             print(datetime.datetime.utcnow().replace(tzinfo=pytz.UTC))
             if  datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) < otp_obj.expires_at:
                 complaint.is_verified = True;
@@ -306,7 +307,7 @@ def OTP_verification(request,pk):
     return redirect('view_complaint',pk)
 
 def sendSMS(number,otp):
-    api_key = config('API_KEY')
+    api_key = env.str('API_KEY')
     try:
         response = requests.get(f"https://2factor.in/API/V1/{api_key}/SMS/{number}/{otp}/OTP1")
         return response.status_code
